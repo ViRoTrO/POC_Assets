@@ -7,8 +7,9 @@ public class drag : MonoBehaviour {
 
 	// Static
 	public static bool objDragged = false;
+    public static Transform rootParent;
 
-	Vector3 dist;
+    Vector3 dist;
 	float posX;
 	float posY;
 	float posZ;
@@ -25,8 +26,7 @@ public class drag : MonoBehaviour {
 	protected Vector3 lastPosition;
 	protected Transform lastParent;
 	protected Vector3 lastValidSnap;
-    protected Transform rootParent;
-
+    
     protected Color shaderColor;
 	protected Vector3 offsetVec3;
 	protected Vector2 offsetVec2;
@@ -56,8 +56,7 @@ public class drag : MonoBehaviour {
 		rend = GetComponent<Renderer> ();
 		col = GetComponent<Collider> ();
 		size = rend.bounds.size;
-        rootParent = transform.parent;
-
+        
         if (rend.sharedMaterial)
 		 shaderColor = rend.sharedMaterial.color;
 		minX = -10.0f + size.x/2;

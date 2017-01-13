@@ -32,6 +32,7 @@ public class MoveCamera : MonoBehaviour
 
 	void Awake() {
 		Application.targetFrameRate = 30;
+        drag.rootParent = transform.parent;
 
         resetPosition = myCamera.transform.position;
         resetRotation = myCamera.transform.rotation;
