@@ -124,9 +124,30 @@ public class drag : MonoBehaviour {
 		DragDummyObject.visible (false);
         DragDummyObject.isColliding = false;
 
+        UIScript.currentSelectionPosition = transform.position;
+        DragDummyObject.obj.transform.rotation = transform.rotation;
+        DragDummyObject.obj.transform.position = transform.position;
+
         isDragging = false;
 		objDragged = false;
 		rend.material.color = shaderColor;
+
+        // Only for doors
+        if(transform.tag.Contains("door") || transform.tag.Contains("Door"))
+        {
+            if (!isSnapped && lastPosition == null)
+            {
+                Destroy(transform.gameObject);
+            }
+            else
+            {
+                transform.position = lastPosition;
+                transform.parent = lastParent;
+                UIScript.currentSelectionPosition = transform.position;
+            }
+               
+        }
+
 	}
 
 	void OnMouseDrag()

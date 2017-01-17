@@ -42,8 +42,8 @@ public class FrameDragHandler : drag {
             snapPoints.Add(new SnapInfo(new Vector3(0.9f, 0.00f, 0.7f), "door", false));
             snapPoints.Add(new SnapInfo(new Vector3(-0.9f, 0.00f, 0.7f), "door", false));
 
-            snapPoints.Add(new SnapInfo(new Vector3(0.0f, 0.2f, 0.7f), "smallDoor", false));
-            snapPoints.Add(new SnapInfo(new Vector3(0.0f, -0.2f, 0.7f), "smallDoor", false));
+            snapPoints.Add(new SnapInfo(new Vector3(0.8f, -0.2f, 0.7f), "smallDoor", false));
+            snapPoints.Add(new SnapInfo(new Vector3(-0.95f, -0.2f, 0.7f), "smallDoor", false));
         }
 		
 	}
@@ -71,7 +71,7 @@ public class FrameDragHandler : drag {
 		}
 	}
 
-	void OnTriggerExit(Collider other)
+    void OnTriggerExit(Collider other)
 	{
 		isColliding = false;
 		if(other.transform.tag == "door") 
@@ -93,7 +93,20 @@ public class FrameDragHandler : drag {
 
 
 		}
-	}
+
+
+        if (other.tag == "dummy")
+        {
+            transform.GetComponent<Renderer>().material.color = shaderColor;
+
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                GameObject child = (GameObject)transform.GetChild(i).gameObject;
+                if (child != null)
+                    child.transform.GetComponent<Renderer>().material.color = shaderColor;
+            }
+        }
+    }
 
 	public void changeTexture (string str)
 	{
@@ -134,7 +147,7 @@ public class FrameDragHandler : drag {
                     frameDragScript = (FrameDragHandler)coll.transform.GetComponent("FrameDragHandler");
                     if (frameDragScript != null)
                     {
-                        snapVec = frameDragScript.nearestSnap(worldPos, lastValidSnap, "frame");
+                        snapVec = frameDragScript.nearestSnap(worldPos, lastValidSnap, transform.tag);
                         dist = Vector3.Distance(snapVec, DragDummyObject.obj.transform.position);
                         nearest = dist;
                         tempObject = coll.transform.gameObject;
@@ -149,7 +162,7 @@ public class FrameDragHandler : drag {
                 frameDragScript = (FrameDragHandler)coll.transform.GetComponent("FrameDragHandler");
                 if (frameDragScript != null)
                 {
-                    sanp = frameDragScript.nearestSnap(worldPos, lastValidSnap, "frame");
+                    sanp = frameDragScript.nearestSnap(worldPos, lastValidSnap, transform.tag);
                     dist = Vector3.Distance(sanp, DragDummyObject.obj.transform.position);
 
                     if (dist < nearest)
@@ -169,10 +182,10 @@ public class FrameDragHandler : drag {
                 if(lastParent != null)
                 {
                     FrameDragHandler script = (FrameDragHandler)lastParent.transform.GetComponent("FrameDragHandler");
-                    script.removeExistingSnap(lastValidSnap, "frame");
+                    script.removeExistingSnap(lastValidSnap, transform.tag);
                 }
 
-                frameDragScript.addSnap(snapVec, "frame");
+                frameDragScript.addSnap(snapVec, transform.tag);
                 transform.parent = tempObject.transform;
                 transform.localPosition = snapVec;
                 isSnapped = true;
@@ -182,20 +195,20 @@ public class FrameDragHandler : drag {
 
                 if (snapVec.x == 1.8f) // right
                 {
-                    addSnap(new Vector3(-1.8f, 0.0f, 0.0f), "frame");
+                    addSnap(new Vector3(-1.8f, 0.0f, 0.0f), transform.tag);
                 }
                 else if (snapVec.x == -1.8f) // left
                 {
-                    addSnap(new Vector3(1.8f, 0.0f, 0.0f), "frame");
+                    addSnap(new Vector3(1.8f, 0.0f, 0.0f), transform.tag);
                 }
 
                 if (lastValidSnap.x == 1.8f) // right
                 {
-                    removeExistingSnap(new Vector3(-1.8f, 0.0f, 0.0f), "frame");
+                    removeExistingSnap(new Vector3(-1.8f, 0.0f, 0.0f), transform.tag);
                 }
                 else if (lastValidSnap.x == -1.8f) // left
                 {
-                    removeExistingSnap(new Vector3(1.8f, 0.0f, 0.0f), "frame");
+                    removeExistingSnap(new Vector3(1.8f, 0.0f, 0.0f), transform.tag);
                 }
 
                
@@ -207,6 +220,21 @@ public class FrameDragHandler : drag {
                 DragDummyObject.visible(true);
                 transform.position = lastPosition;
                 transform.parent = lastParent;
+
+                // Show collision
+                foreach (Collider coll in DragDummyObject.activeCollisions)
+                {
+                    GameObject collObj = (GameObject)coll.transform.gameObject;
+                    collObj.transform.GetComponent<Renderer>().material.color = Color.red;
+
+                    for (int i = 0; i < coll.transform.childCount; i++)
+                    {
+                        GameObject child = (GameObject)coll.transform.GetChild(i).gameObject;
+                        if (child != null)
+                            child.transform.GetComponent<Renderer>().material.color = Color.red;
+
+                    }
+                }
             }
            
         }
@@ -215,7 +243,7 @@ public class FrameDragHandler : drag {
             if(isSnapped && lastParent != null)
             {
                 FrameDragHandler script = (FrameDragHandler)lastParent.transform.GetComponent("FrameDragHandler");
-                script.removeExistingSnap(lastValidSnap, "frame");
+                script.removeExistingSnap(lastValidSnap, transform.tag);
             }
             DragDummyObject.visible(false);
             transform.parent = rootParent;

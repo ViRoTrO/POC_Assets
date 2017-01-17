@@ -11,6 +11,8 @@ public class DoorDragHandler : drag {
 		base.Awake ();
 		//snapVec = new Vector3 (0.0f, 0.00f, 0.6f);
 		addSnapPoints();
+
+        lastParent = transform.parent;
 	}
 
 	void addSnapPoints()
@@ -52,7 +54,23 @@ public class DoorDragHandler : drag {
 		}
 	}
 
-	public void changeTexture (string str)
+    void OnTriggerExit(Collider other)
+    {
+        if(other.tag == "dummy")
+        {
+           transform.GetComponent<Renderer>().material.color = shaderColor;
+
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                GameObject child = (GameObject)transform.GetChild(i).gameObject;
+                if (child != null)
+                    child.transform.GetComponent<Renderer>().material.color = shaderColor;
+            }
+        }
+    }
+
+
+    public void changeTexture (string str)
 	{
 		Texture txt;
 		if (str == "1") {
@@ -144,6 +162,22 @@ public class DoorDragHandler : drag {
                 DragDummyObject.visible(true);
                 transform.position = lastPosition;
                 transform.parent = lastParent;
+
+                // Show collision
+                foreach (Collider coll in DragDummyObject.activeCollisions)
+                {
+                   GameObject collObj = (GameObject)coll.transform.gameObject;
+                    collObj.transform.GetComponent<Renderer>().material.color = Color.red;
+
+                    for (int i = 0; i < coll.transform.childCount; i++)
+                    {
+                        GameObject child = (GameObject)coll.transform.GetChild(i).gameObject;
+                        if (child != null)
+                            child.transform.GetComponent<Renderer>().material.color = Color.red;
+
+                    }
+                }
+                   
             }
         }
         else
