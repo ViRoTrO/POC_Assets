@@ -18,7 +18,6 @@ public class drag : MonoBehaviour {
 
 	// protected
 	protected bool isColliding;
-	protected bool isDragging;
 	protected bool isSnapped;
 	protected Collider col;
 	protected string currentTexture;
@@ -50,26 +49,81 @@ public class drag : MonoBehaviour {
 
 	string currentWall;
 
+    public bool dragOnMouseMove;
+    public bool isDragging;
+    public bool isFirstTime = true;
 
-	protected virtual void Awake(){
-		
-		rend = GetComponent<Renderer> ();
-		col = GetComponent<Collider> ();
-		size = rend.bounds.size;
-        
+    protected virtual void Awake()
+    {
+
+        rend = GetComponent<Renderer>();
+        col = GetComponent<Collider>();
+        size = rend.bounds.size;
+
         if (rend.sharedMaterial)
-		 shaderColor = rend.sharedMaterial.color;
-		minX = -10.0f + size.x/2;
-		maxX = 10.0f - size.x/2;
+            shaderColor = rend.sharedMaterial.color;
+        minX = -10.0f + size.x / 2;
+        maxX = 10.0f - size.x / 2;
 
-		minZ = -10.0f + size.z/2;
-		maxZ = 10.0f - size.z/2;
-	}
+        minZ = -10.0f + size.z / 2;
+        maxZ = 10.0f - size.z / 2;
+
+       if (!isFirstTime)
+            isFirstTime = true;
+    }
+
+    
 
 	void Update () {
 
-//		float scroll = Input.GetAxis("Mouse ScrollWheel");
-//		myCamera.transform.Translate(0, scroll * zoomSpeed, scroll * zoomSpeed, Space.World);
+        if (dragOnMouseMove && isFirstTime)
+        {
+            rend.enabled = false;
+        }
+
+       
+
+        if (EventSystem.current.IsPointerOverGameObject() || !isDragging)
+           return;
+
+        
+        if (dragOnMouseMove)
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                OnMouseUp();
+                return;
+            }
+
+            if (isFirstTime)
+            {
+                rend.enabled = true;
+
+                // for object position
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit[] hits = Physics.RaycastAll(ray, 100);
+                RaycastHit hit;
+                for (int i = 0; i < hits.Length; i++)
+                {
+                    hit = hits[i];
+                    if (hit.transform.tag == "floor" || hit.transform.tag.Contains("wall"))
+                    {
+                        transform.position = hit.point;
+                        break;
+                    }
+                }
+                                
+                OnMouseDown();
+                isFirstTime = false;
+                
+            }
+
+           checkRayCast();
+           UIScript.currentSelectionPosition = transform.position;
+           
+           
+        }
+
 	}
 
 
@@ -101,7 +155,7 @@ public class drag : MonoBehaviour {
 			hit = hits [i];
 			if (hit.transform.tag == "floor" || hit.transform.tag.Contains ("wall")) {
 				offsetVec3 = transform.position - hit.point;
-				break;
+                break;
 			}
 		}
 
@@ -109,11 +163,10 @@ public class drag : MonoBehaviour {
 		oldMousePosY = Input.mousePosition.y;
 		objDragged = true;
 
-		//rend.sha
-		rend.material.color = new Color (0.5f,0.8f,1.0f); //Color.blue; new Color(
+		changeShaderColor(new Color (0.5f,0.8f,1.0f)); //Color.blue; new Color(
 		UIScript.currentSelection = transform.gameObject;
         UIScript.currentSelectionPosition = transform.position;
-        UIScript.showDelete = true;
+        UIScript.showEditUI = true;
     }
 	  
 	void OnMouseUp()
@@ -121,7 +174,9 @@ public class drag : MonoBehaviour {
 		if (EventSystem.current.IsPointerOverGameObject ())
 			return;
 
-		DragDummyObject.visible (false);
+        dragOnMouseMove = false;
+        
+        DragDummyObject.visible (false);
         DragDummyObject.isColliding = false;
 
         UIScript.currentSelectionPosition = transform.position;
@@ -130,10 +185,11 @@ public class drag : MonoBehaviour {
 
         isDragging = false;
 		objDragged = false;
-		rend.material.color = shaderColor;
+		
+        changeShaderColor(shaderColor);
 
         // Only for doors
-        if(transform.tag.Contains("door") || transform.tag.Contains("Door"))
+        if (transform.tag.Contains("door") || transform.tag.Contains("Door"))
         {
             if (!isSnapped && lastPosition == null)
             {
@@ -156,11 +212,7 @@ public class drag : MonoBehaviour {
 			return;
 
 		}
-//		if (isSnapped)
-//			return;
-		
-//		dist.z = dist.z - (oldMousePosY - Input.mousePosition.y) * 0.09f  ;
-//		oldMousePosY = Input.mousePosition.y;
+
 
 		checkRayCast ();
         UIScript.currentSelectionPosition = transform.position;
@@ -260,12 +312,28 @@ public class drag : MonoBehaviour {
 		
 	}
 
+    protected virtual void changeShaderColor(Color val)
+    {
+               
+        rend.material.color = val;
 
-	/*------------------------------------------------Snap----------------------------------------------------------------------*/
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            GameObject child = (GameObject)transform.GetChild(i).gameObject;
+            if (child != null)
+                child.transform.GetComponent<Renderer>().material.color = val;
+
+        }
+        
+
+    }
 
 
-	//protected  // instead of null check for 10000.0 value
-	protected float nearestSnapDist;
+    /*------------------------------------------------Snap----------------------------------------------------------------------*/
+
+
+    //protected  // instead of null check for 10000.0 value
+    protected float nearestSnapDist;
 	public Vector3 nearestSnap(Vector3 currentGlobalPoint, Vector3 currentSanppedLocalPosition, string type)
 	{
 		nearestSnapDist = 0.0f;

@@ -95,7 +95,7 @@ public class FrameDragHandler : drag {
 		}
 
 
-        if (other.tag == "dummy")
+        if (other.tag == "dummy" && !isDragging)
         {
             transform.GetComponent<Renderer>().material.color = shaderColor;
 
